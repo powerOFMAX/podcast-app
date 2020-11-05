@@ -23,6 +23,13 @@ export default function App({ Component, pageProps }: AppProps): ReactNode {
       <ThemeProvider theme={theme}>
         <Component {...pageProps} />
       </ThemeProvider>
+      <style jsx global>{`
+        body {
+          margin: 0;
+          font-family: system-ui;
+          background: white;
+        }
+      `}</style>
     </>
   );
 }

@@ -9,6 +9,7 @@
     "format": "prettier --write './**/*.{js,jsx,ts,tsx,css,md,json}' --config ./.prettierrc"
   },
   "dependencies": {
+    "isomorphic-fetch": "^3.0.0",
     "next": "^10.0.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
