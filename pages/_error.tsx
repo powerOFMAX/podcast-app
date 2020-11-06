@@ -7,7 +7,7 @@ type Status = {
   statusCode?: unknown;
 };
 
-export const getServerSideProps = async ({
+export const getStaticProps = async ({
   res,
   params
 }: GetServerSidePropsContext): Promise<{ props: Status }> => {
