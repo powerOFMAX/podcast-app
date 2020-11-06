@@ -1,43 +1,95 @@
-import { ReactNode } from 'react';
+/* eslint-disable react-hooks/rules-of-hooks */
+import { ReactElement, useState } from 'react';
 import styled from 'styled-components';
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import fetch from 'isomorphic-fetch';
 import Layout from '@components/Layout';
 import ChannelGrid from '@components/ChannelGrid';
-import PodcastList from '@components/PodcastList';
+import PodcastPlayer from '@components/PodcastPlayer';
+import PodcastListWithClick from '@components/PodcastListWithClick';
+import Error from './_error';
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next';
 
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
+export const getServerSideProps = async ({
+  query,
+  res
+}: GetServerSidePropsContext): Promise<{ props: TChannel }> => {
   const idChannel = query.id;
-  const [reqChannel, reqSeries, reqAudios] = await Promise.all([
-    fetch(`https://api.audioboom.com/channels/${idChannel}`).then((response) => response.json()),
-    fetch(`https://api.audioboom.com/channels/${idChannel}/child_channels`).then((response) =>
-      response.json()
-    ),
-    fetch(`https://api.audioboom.com/channels/${idChannel}/audio_clips`).then((response) =>
-      response.json()
-    )
-  ]).catch((err) => console.error(err));
 
-  const channel = reqChannel.body.channel;
-  const audioClips = reqAudios.body.audio_clips;
-  const series = reqSeries.body.channels;
+  try {
+    const [reqChannel, reqSeries, reqAudios] = await Promise.all([
+      fetch(`https://api.audioboom.com/channels/${idChannel}`).then((response) => response.json()),
+      fetch(`https://api.audioboom.com/channels/${idChannel}/child_channels`).then((response) =>
+        response.json()
+      ),
+      fetch(`https://api.audioboom.com/channels/${idChannel}/audio_clips`).then((response) =>
+        response.json()
+      )
+    ]);
 
-  return {
-    props: {
-      channel,
-      audioClips,
-      series
+    if (reqChannel.status >= 400) {
+      res.statusCode = reqChannel.status;
+      return {
+        props: {
+          channel: null,
+          audioClips: null,
+          series: null,
+          statusCode: reqChannel.status
+        }
+      };
     }
-  };
+
+    const channel = reqChannel.body.channel;
+    const audioClips = reqAudios.body.audio_clips;
+    const series = reqSeries.body.channels;
+
+    return {
+      props: {
+        channel,
+        audioClips,
+        series,
+        statusCode: 200
+      }
+    };
+  } catch (e) {
+    return { props: { channel: null, audioClips: null, series: null, statusCode: 503 } };
+  }
 };
 
-const ChannelComponent: InferGetServerSidePropsType<typeof getServerSideProps> = ({
+const ChannelComponent = ({
   channel,
   audioClips,
-  series
-}): ReactNode => {
+  series,
+  statusCode
+}: InferGetServerSidePropsType<typeof getServerSideProps>): ReactElement => {
+  if (statusCode !== 200) {
+    return <Error statusCode={statusCode} />;
+  }
+
+  const [podcast, setPodcast] = useState(null);
+
+  const openPodcast = (event, podcast) => {
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      (event.nativeEvent && event.nativeEvent.which === 2)
+    ) {
+      // If is doing Ctrl+Click or Cmd+Click we keep the user clicking
+      return;
+    }
+    event.preventDefault();
+    setPodcast(podcast);
+  };
+
+  const closePodcast = (event) => {
+    event.preventDefault();
+    setPodcast(null);
+  };
+
   return (
     <Layout title={channel.title}>
+      {podcast && <PodcastPlayer clip={podcast} onClose={(e) => closePodcast(e)} />}
+
       <Banner style={{ backgroundImage: `url(${channel.urls.banner_image.original})` }} />
       <Title>{channel.title}</Title>
 
@@ -49,7 +101,7 @@ const ChannelComponent: InferGetServerSidePropsType<typeof getServerSideProps> =
       )}
 
       <H2>Latest podcasts</H2>
-      <PodcastList podcasts={audioClips} />
+      <PodcastListWithClick podcasts={audioClips} onClickPodcast={openPodcast} />
     </Layout>
   );
 };

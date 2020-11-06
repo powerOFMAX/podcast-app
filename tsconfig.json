@@ -2,7 +2,6 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@cors": ["cors-middleware.ts"],
       "@components/*": ["components/*"],
     },
     "target": "es5",

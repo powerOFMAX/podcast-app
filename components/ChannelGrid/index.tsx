@@ -2,18 +2,6 @@ import { ReactElement } from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 
-type TURLobject = {
-  logo_image: {
-    original: string;
-  };
-};
-
-type TChannels = {
-  id: number;
-  title: string;
-  urls: TURLobject;
-};
-
 const ChannelGrid = ({ channels }: { channels: Array<TChannels> }): ReactElement => {
   return (
     <Channels>

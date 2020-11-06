@@ -1,13 +1,19 @@
-import Link from 'next/link';
 import { ReactElement } from 'react';
+import Link from 'next/link';
 import styled from 'styled-components';
 
-const PodcastList = ({ podcasts }: { podcasts: Array<Podcast> }): ReactElement => {
+const PodcastListWithClick = ({
+  podcasts,
+  onClickPodcast
+}: {
+  podcasts: Array<Podcast>;
+  onClickPodcast: (event, podcast) => void;
+}): ReactElement => {
   return (
     <div>
       {podcasts.map((podcast) => (
         <Link href={`/podcast?id=${podcast.id}`} key={podcast.id}>
-          <Podcast>
+          <Podcast onClick={(event) => onClickPodcast(event, podcast)}>
             <h3>{podcast.title}</h3>
             <div className="meta">{Math.ceil(podcast.duration / 60)} minutes</div>
           </Podcast>
@@ -37,4 +43,4 @@ const Podcast = styled.a`
   }
 `;
 
-export default PodcastList;
+export default PodcastListWithClick;
